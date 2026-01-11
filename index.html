@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>SMART SPACE</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+
+<style>
+:root{
+  --bg-dark:#0b1c2d;
+  --blue:#1976d2;
+  --gold:#fbc02d;
+  --gold-dark:#c49000;
+  --white:#f5f7fa;
+}
+
+body{
+  margin:0;
+  font-family:Arial,sans-serif;
+  text-align:center;
+  background:url("https://static.vecteezy.com/system/resources/previews/001/882/531/original/dark-blue-technology-background-free-vector.jpg") center/cover fixed;
+  color:var(--gold);
+}
+
+h1{
+  margin:15px 0;
+}
+
+/* LOGIN */
+#loginForm{
+  max-width:360px;
+  margin:80px auto;
+  background:rgba(11,28,45,.95);
+  padding:25px;
+  border-radius:15px;
+  border:1px solid var(--gold);
+}
+
+#loginForm input{
+  width:100%;
+  padding:12px;
+  margin-bottom:15px;
+  border-radius:10px;
+  border:1px solid var(--gold);
+  background:#0f2a44;
+  color:white;
+}
+
+#loginForm button{
+  width:100%;
+  padding:12px;
+  border:none;
+  border-radius:10px;
+  background:linear-gradient(135deg,var(--gold),var(--gold-dark));
+  font-weight:bold;
+  cursor:pointer;
+}
+
+/* DASHBOARD */
+#dashboard{ display:none; }
+
+.relay-container{
+  max-width:900px;
+  margin:auto;
+  display:flex;
+  flex-wrap:wrap;
+  justify-content:center;
+}
+
+.relay-card{
+  width:220px;
+  margin:15px;
+  padding:20px;
+  background:rgba(11,28,45,.9);
+  border-radius:15px;
+  border:1px solid var(--gold);
+}
+
+.relay-card h2{
+  margin:5px 0;
+}
+
+.relay-card p{
+  font-size:.9rem;
+}
+
+.relay-card button{
+  width:90%;
+  padding:9px;
+  border-radius:9px;
+  border:none;
+  background:linear-gradient(135deg,#2196f3,#0d47a1);
+  color:var(--gold);
+  cursor:pointer;
+}
+
+/* LOGOUT */
+#logoutBtn{
+  margin:20px auto;
+  padding:12px;
+  width:200px;
+  border:none;
+  border-radius:10px;
+  background:linear-gradient(135deg,var(--gold),var(--gold-dark));
+  font-weight:bold;
+  cursor:pointer;
+}
+
+/* 🔥 CLEAN MOBILE MODE */
+@media(max-width:600px){
+
+  .relay-container{
+    flex-direction:column;
+    gap:12px;
+    padding:10px;
+  }
+
+  .relay-card{
+    width:100%;
+    margin:0;
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    padding:14px 16px;
+  }
+
+  .relay-card p{
+    display:none;
+  }
+
+  .relay-card h2{
+    font-size:.9rem;
+  }
+
+  .relay-card button{
+    width:auto;
+    padding:8px 14px;
+    font-size:.75rem;
+    border-radius:20px;
+  }
+}
+
+footer{
+  margin:10px 0;
+  font-size:.8rem;
+}
+</style>
+</head>
+
+<body>
+
+<h1>SMART SPACE</h1>
+
+<div id="loginForm">
+  <input type="email" id="email" placeholder="Email">
+  <input type="password" id="password" placeholder="Password">
+  <button id="loginBtn">LOGIN</button>
+</div>
+
+<div id="dashboard">
+
+  <div class="relay-container">
+
+    <div class="relay-card">
+      <h2> LOCK</h2>
+      <p>Status: <span id="status1">...</span></p>
+      <button id="btn1">...</button>
+    </div>
+
+    <div class="relay-card">
+      <h2> UNLOCK</h2>
+      <p>Status: <span id="status2">...</span></p>
+      <button id="btn2">...</button>
+    </div>
+
+    <div class="relay-card">
+      <h2>ENGINE_OFF</h2>
+      <p>Status: <span id="status3">...</span></p>
+      <button id="btn3">...</button>
+    </div>
+
+    <div class="relay-card">
+      <h2> PARKINGLIGHT_ON</h2>
+      <p>Status: <span id="status4">...</span></p>
+      <button id="btn4">...</button>
+    </div>
+
+  </div>
+
+  <button id="logoutBtn">LOGOUT</button>
+</div>
+
+<footer>Created by CHANAKA</footer>
+
+<!-- FIREBASE -->
+<script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-database-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-auth-compat.js"></script>
+
+<script>
+document.addEventListener("DOMContentLoaded",()=>{
+
+firebase.initializeApp({
+  apiKey:"AIzaSyD0YRMfJeLWRbRhTz6sVldri0sWrA7xtKQ",
+  authDomain:"esp32--relay-control.firebaseapp.com",
+  databaseURL:"https://esp32--relay-control-default-rtdb.europe-west1.firebasedatabase.app",
+  projectId:"esp32--relay-control"
+});
+
+const allowedEmail="abijayasinghe@gmail.com";
+const allowedPassword="ABI12340";
+
+const loginForm=document.getElementById("loginForm");
+const dashboard=document.getElementById("dashboard");
+
+document.getElementById("loginBtn").onclick=()=>{
+  if(email.value===allowedEmail && password.value===allowedPassword){
+    firebase.auth().signInWithEmailAndPassword(email.value,password.value)
+    .then(()=>{
+      loginForm.style.display="none";
+      dashboard.style.display="block";
+      startRelays();
+    });
+  }else alert("Invalid login");
+};
+
+function startRelays(){
+  const db=firebase.database();
+  const names=["LOCK","UNLOCK","ENGINE_OFF","PARKINGLIGHT_ON"];
+
+  names.forEach((n,i)=>{
+    const status=document.getElementById(`status${i+1}`);
+    const btn=document.getElementById(`btn${i+1}`);
+    const ref=db.ref("/"+n);
+
+    ref.on("value",s=>{
+      const on=s.val();
+      status.innerText=on?"ON":"OFF";
+      btn.innerText=on?"TURN OFF":"TURN ON";
+    });
+
+    btn.onclick=()=>ref.get().then(s=>ref.set(!s.val()));
+  });
+}
+
+document.getElementById("logoutBtn").onclick=()=>{
+  firebase.auth().signOut();
+  dashboard.style.display="none";
+  loginForm.style.display="block";
+};
+
+});
+</script>
+
+</body>
+</html>
